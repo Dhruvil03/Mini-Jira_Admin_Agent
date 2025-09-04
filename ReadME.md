@@ -105,5 +105,4 @@ mini_jira_admin_agent/
 Parts of this project (ReadME, test case, code checking) were created with the assistance of an AI (gpt-oss-120B, ChatGPT). Logic was reviewed and adapted for clarity and correctness.
 
 # 🙌 Contributions / Issues
-Feel free to connect, raise an issue if you'd like to contribute or report bugs.
-
+Feel free to fork, raise an issue, or create a pull request if you'd like to contribute or report bugs.
