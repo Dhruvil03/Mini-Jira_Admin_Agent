@@ -34,6 +34,7 @@ ollama serve
 Install dependencies:
 ```bash
 python -m venv jira_env
+
 # MacOS/Linux
 source jira_env/bin/activate
 
