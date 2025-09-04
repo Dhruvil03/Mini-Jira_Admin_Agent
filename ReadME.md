@@ -45,15 +45,33 @@ pytest -q
 ```
 
 # Example Queries
-- add user 1 Alice
-- create ticket Login for Alice
-- view ticket for user id 1
-- update ticket status to closed for Alice
-- list tickets
-- list tickets with status open (#List tickets with particular status)
-- delete ticket for Alice
-- Reset database
-- exit
+```bash
+# add user
+add user 1 Alice
+
+# create ticket
+create ticket Login for Alice
+
+# view ticket for user 1
+view ticket for user id 1
+
+# change ticket status
+update ticket status to closed for Alice
+
+# list tickets
+list tickets
+
+# list tickets with status = OPEN (#List tickets with particular status)
+list tickets with status open 
+
+# delete ticket
+delete ticket for Alice
+
+# reset database
+Reset database
+
+exit
+```
 
 ## Project Structure
 ```
