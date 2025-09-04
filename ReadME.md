@@ -28,6 +28,7 @@ It supports:
 # How to setup the project
 Run Ollama (run in different terminal):
 ```bash
+ollama pull llama3
 ollama serve
 ```
 
