@@ -34,7 +34,12 @@ ollama serve
 Install dependencies:
 ```bash
 python -m venv jira_env
+# MacOS/Linux
 source jira_env/bin/activate
+
+# Windows (PowerShell)
+.\jira_env\Scripts\Activate.ps1
+
 pip install -r requirements.txt
 ```
 
