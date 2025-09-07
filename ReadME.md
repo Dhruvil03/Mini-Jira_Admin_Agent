@@ -28,13 +28,13 @@ It supports:
 # How to setup the project
 1. Clone the Repository 
 
-Run Ollama (run in different terminal):
+2. Run Ollama (run in different terminal):
 ```bash
 ollama pull llama3
 ollama serve
 ```
 
-Install dependencies:
+3. Install dependencies:
 ```bash
 python -m venv jira_env
 
@@ -47,7 +47,7 @@ source jira_env/bin/activate
 pip install -r requirements.txt
 ```
 
-Run the terminal chat:
+4. Run the terminal chat:
 ```bash
 python demo.py
 pytest -q 
