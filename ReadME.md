@@ -26,6 +26,8 @@ It supports:
 - Local Ollama model (`llama3`) — install Ollama and run it.
 
 # How to setup the project
+1. Clone the Repository 
+
 Run Ollama (run in different terminal):
 ```bash
 ollama pull llama3
