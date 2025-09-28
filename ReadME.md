@@ -1,59 +1,103 @@
-# Mini-Jira Admin Agent (LangGraph)
+# 📝 Mini-Jira Admin Agent (LangGraph + FastAPI + React)
 
-A terminal-based chatbot that manages a tiny Jira-like SQLite database via natural-language using **LangGraph**.
-It supports:
-- Add new user
-- Create new ticket & assign to user (with duplicate-title and user-existence checks)
-- View ticket title by id (handles not-found)
-- Responds with `I can’t help with ...` for unsupported actions
+A **full-stack Jira-like agent** that manages tickets and users via **natural language**.
 
-## Bonus Capabilities (included)
-- Asks back when information is missing (e.g., missing assignee for a new ticket)
-- Adds a `status` column with `OPEN | IN_PROGRESS | CLOSED`
-- Natural-language status updates (`change status to closed for user_id <user_id>`, etc.)
-- List tickets (open/closed/in-progress/all) as a table
-- PyTest test
-- History compaction to avoid exploding memory
-- ReadME added
+* **Frontend**: React + Vite (UI for user interaction)
+* **Backend**: FastAPI (API for database + LLM routing)
+* **Database**: SQLite (auto-created if not present)
+* **AI Layer**: LangGraph + local Ollama model (`llama3`) for natural-language intent parsing and routing
 
-## Additional Capabilities (included)
-- Delete user (using user_id)
-- Delete ticket (using user_id)
-- Reset Database (clear all the entries in both users and ticket tables)
-- If database is not in the folder than it will create a new database (i.e. - database.db) by itself.
+---
 
-## Requirements
-- Local Ollama model (`llama3`) — install Ollama and run it.
+## 🚀 Features
 
-# How to setup the project
-1. Clone the Repository 
+* **User Management**
 
-2. Run Ollama (run in different terminal):
-```bash
-ollama pull llama3
-ollama serve
+  * Add new users
+  * Delete users by `user_id`
+
+* **Ticket Management**
+
+  * Create tickets and assign to users
+
+    * Prevents duplicate titles
+    * Validates user existence
+  * View ticket by ID (with not-found handling)
+  * Update ticket status (`OPEN | IN_PROGRESS | CLOSED`) using natural language
+  * Delete tickets by `user_id`
+
+* **Listing & Status**
+
+  * List all tickets in a clean **table view**
+  * Filter tickets by status (`open`, `closed`, `in-progress`, or all)
+
+* **Database Operations**
+
+  * Reset database (clear all users & tickets)
+  * Auto-create `database.db` if missing
+
+* **Conversation Handling**
+
+  * Prompts for missing information (e.g., assignee for new tickets)
+  * History compaction to prevent memory overload
+
+---
+
+## 🛠 Project Structure
+
+```
+Mini-Jira_Admin_Agent/
+├─ Backend/                        # FastAPI backend
+│  ├─ __pycache__/                 # Python cache files
+│  ├─ mini_jira_admin_agent/       # Core backend package
+│  │   ├─ config.py                # Backend/model config
+│  │   ├─ db.py                    # SQLite helpers
+│  │   ├─ tools.py                 # DB operations (add user, create ticket, etc.)
+│  │   ├─ graph.py                 # LangGraph router + tool nodes
+│  │   ├─ nlp_prompts.py           # System prompt for routing
+│  │   └─ __init__.py
+│  │
+│  ├─ tests/                       # Backend tests
+│  │   └─ test_sample.py
+│  │
+│  ├─ utils/                       # Utility helpers
+│  │   ├─ database_creation.py     # Explicit DB creation helper
+│  │   └─ compact_history.py       # History compaction logic
+│  │
+│  ├─ .DS_Store                    # macOS metadata (safe to gitignore)
+│  ├─ ReadME.md                    # Backend-specific README
+│  ├─ database.db                  # SQLite database (auto-created; consider gitignore)
+│  ├─ demo.py                      # CLI chatbot loop (optional)
+│  ├─ requirements.txt             # Python dependencies
+│  └─ server.py                    # FastAPI entrypoint
+│
+├─ Frontend/                       # React + Vite frontend
+│  ├─ public/                      # Static assets
+│  ├─ src/                         # React source files
+│  │   ├─ components/              # Reusable UI components
+│  │   ├─ pages/                   # Page-level views
+│  │   ├─ App.jsx                  # Root React component
+│  │   └─ main.jsx                 # Entry point for ReactDOM
+│  │
+│  ├─ .gitignore
+│  ├─ README.md                    # Frontend-specific README
+│  ├─ components.json              # Config for UI components (shadcn/ui if used)
+│  ├─ eslint.config.js             # ESLint config
+│  ├─ index.html                   # Base HTML template
+│  ├─ jsconfig.json                # JS path aliases
+│  ├─ package-lock.json
+│  ├─ package.json
+│  ├─ postcss.config.js            # PostCSS config
+│  ├─ tailwind.config.js           # Tailwind CSS config
+│  └─ vite.config.js               # Vite config
+│
+└─ ReadME.md                       # Root README (main project overview)
 ```
 
-3. Install dependencies:
-```bash
-python -m venv jira_env
+---
 
-# MacOS/Linux
-source jira_env/bin/activate
+## ⚡ Example Queries (via UI or CLI)
 
-# Windows (PowerShell)
-.\jira_env\Scripts\Activate.ps1
-
-pip install -r requirements.txt
-```
-
-4. Run the terminal chat:
-```bash
-python demo.py
-pytest -q 
-```
-
-# Example Queries
 ```bash
 # add user
 add user 1 Alice
@@ -69,49 +113,78 @@ update ticket status to closed for Alice
 
 # list tickets
 list tickets
-
-# list tickets with status = OPEN (#List tickets with particular status)
-list tickets with status open 
+list tickets with status open
 
 # delete ticket
 delete ticket for Alice
 
 # reset database
-Reset database
-
-exit
+reset database
 ```
 
-## Project Structure
-```
-mini_jira_admin_agent/
-├─ demo.py                   # Terminal chat loop
-├─ requirements.txt
-├─ mini_jira_admin_agent/
-│  ├─ config.py              # Backend/model selection
-│  ├─ db.py                  # SQLite helpers 
-│  ├─ tools.py               # DB tools (add user, create ticket, etc.)
-│  ├─ graph.py               # LangGraph: router + tool nodes
-│  ├─ nlp_prompts.py         # Router system prompt
-└─ tests/
-│   └─ test_sample.py
-└─ utils/
-    └─ database_creation.py  # python code to create database (explicitly)
-    └─ compact_history.py    # history compaction to avoid exploding memory
+---
+
+## 🖥️ Setup & Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Dhruvil03/Mini-Jira_Admin_Agent.git
+cd Mini-Jira_Admin_Agent
 ```
 
-## Design
-- **LangGraph** graph with nodes:
-  - `route` (LLM) → emits `intent` + extracted arguments
-  - tool nodes: `add_user`, `create_ticket`, `view_ticket`, `update_status`, `list_tickets`
-  - `unsupported` for unsupported intents, `clarify` when info is missing
-- **Exploding history** is mitigated by a small rolling window + periodic summary compaction.
-- We keep natural-language routing via the LLM to meet the requirement “use LLMs for natural-language conversations.”
-- The DB logic is separated in `tools.py`.
-- Ticket creation validates user existence and duplicate titles.
+### 2. Start Ollama (for LLM routing)
 
-## AI Usage Disclosure
-Parts of this project (ReadME, test case, code checking) were created with the assistance of an AI (gpt-oss-120B, ChatGPT). Logic was reviewed and adapted for clarity and correctness.
+```bash
+ollama pull llama3
+ollama serve
+```
 
-# 🙌 Contributions / Issues
-Feel free to fork, raise an issue, or create a pull request if you'd like to contribute or report bugs.
+### 3. Backend Setup (FastAPI)
+
+```bash
+cd backend
+python -m venv jira_env
+
+# MacOS/Linux
+source jira_env/bin/activate
+
+# Windows (PowerShell)
+.\jira_env\Scripts\Activate.ps1
+
+pip install -r requirements.txt
+
+# Run backend server
+uvicorn server:app --host 127.0.0.1 --port 8000 --reload --log-level debug
+```
+
+### 4. Frontend Setup (React + Vite)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend will start on `http://localhost:5173`
+Backend runs on `http://127.0.0.1:8000`
+
+---
+
+## 🧠 Design
+
+* **LangGraph Router** for natural-language intent recognition
+* **FastAPI Backend** for DB operations and API routes
+* **React + Vite Frontend** for a modern, responsive UI
+* **SQLite Database** for persistent storage
+* **History Compaction** keeps conversations efficient 
+
+---
+
+## 🙌 Contributions
+
+Feel free to **fork**, **open an issue**, or **submit a PR** to improve the project!
+
+👉 [Mini-Jira Admin Agent Repository](https://github.com/Dhruvil03/Mini-Jira_Admin_Agent)
+
+---
