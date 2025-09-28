@@ -181,6 +181,11 @@ Backend runs on `http://127.0.0.1:8000`
 
 ---
 
+# Flowchart
+<img width="1393" height="381" alt="Data Preprocessing Pipeline" src="https://github.com/user-attachments/assets/b84af8aa-6d05-427f-aec8-c5e4367456cd" />
+
+---
+
 ## 🙌 Contributions
 
 Feel free to **fork**, **open an issue**, or **submit a PR** to improve the project!
