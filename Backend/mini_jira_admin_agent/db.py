@@ -1,8 +1,9 @@
 import sqlite3, argparse
+from typing import List, Dict, Any
 
 # establishing connection
 def get_conn():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect("database.db",  check_same_thread=False)
     conn.row_factory = sqlite3.Row    # it will return object instead of tuple
     conn.execute("PRAGMA foreign_keys = ON;") # explicitly giving foreign key constraint
     return conn
@@ -33,7 +34,11 @@ def init_db():
     conn.close()
 
     print("Database and tables created successfully.")
-    
+
+def show_users() -> list[dict]:
+    rows = conn.execute("SELECT * FROM users").fetchall()
+    return [{"user_id": r["id"], "name": r["name"]} for r in rows]
+
 def add_user(user_id: int, name: str) -> str:
     with get_conn() as conn:
         try:
@@ -110,7 +115,7 @@ def delete_ticket(user_id: int) -> str:
         except Exception as e:
             return f"Error while deleting ticket for user id {user_id}: {e}"
 
-def list_tickets(kind: str = "all") -> str:
+def list_tickets(kind: str = "OPEN") -> str:
     kind = kind.lower().replace("-", "_")
     query = "SELECT t.id, t.title, t.assignee_id, u.name AS assignee, t.status FROM tickets t JOIN users u ON t.assignee_id = u.id"
     params = ()
@@ -127,6 +132,44 @@ def list_tickets(kind: str = "all") -> str:
     headers = ["id", "title", "assignee", "status"]
     table = tabulate([[r["id"], r["title"], r["assignee_id"], r["assignee"], r["status"]] for r in rows], headers=["id","title","assignee_id","assignee","status"], tablefmt="github")
     return table
+
+def list_tickets_all(kind: str = "OPEN") -> List[Dict[str, Any]]:
+    """
+    FastAPI-friendly: return a JSON-serializable list of tickets.
+    Shape: [{id, title, assignee_id, assignee, status}, ...]
+    """
+    kind_norm = (kind or "ALL").upper().replace("-", "_")
+
+    query = """
+        SELECT t.id,
+               t.title,
+               t.assignee_id,
+               u.name AS assignee,
+               t.status
+        FROM tickets t
+        JOIN users u ON t.assignee_id = u.id
+    """
+    params = ()
+    if kind_norm in {"OPEN", "IN_PROGRESS", "CLOSED"}:
+        query += " WHERE t.status = ?"
+        params = (kind_norm,)
+    query += " ORDER BY t.id ASC"
+
+    with get_conn() as conn:
+        rows = conn.execute(query, params).fetchall()
+
+    # Ensure a list of dicts even if empty
+    return [
+        {
+            "id": r["id"],
+            "title": r["title"],
+            "assignee_id": r["assignee_id"],
+            "assignee": r["assignee"],
+            "status": r["status"],
+        }
+        for r in rows
+    ]
+
 
 def reset_db() -> str:
     """Delete all rows from tickets and users tables (reset the database)."""

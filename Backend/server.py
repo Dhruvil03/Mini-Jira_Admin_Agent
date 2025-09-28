@@ -1,12 +1,20 @@
 # server.py
+from uuid import uuid4
+from collections import defaultdict
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Literal
 from mini_jira_admin_agent import tools, db
 from mini_jira_admin_agent.graph import build_app as run_langgraph  # your LangGraph router
+import logging, traceback
+logger = logging.getLogger("mini_jira")
 
 app = FastAPI(title="Mini-Jira Admin Agent API", version="1.0")
+
+
+# Build the LangGraph app once at startup
+lang_app = run_langgraph()
 
 # Allow frontend (Vite dev server) to call this API
 app.add_middleware(
@@ -40,18 +48,31 @@ class StatusIn(BaseModel):
 # =========================================================
 # 1️⃣ Natural-Language Mode (goes through LangGraph router)
 # =========================================================
+# @app.post("/api/chat")
+# def chat(inp: ChatIn):
+#     """
+#     Chat endpoint: send free-text commands like
+#     'create ticket Login for Alice' or 'add user 1 Alice'.
+#     LangGraph router will parse and execute using tools.py.
+#     """
+#     try:
+#         # single-turn call; if you need history, we can add sessions later
+#         result = lang_app.invoke({"messages": [{"role": "user", "content": inp.message}]})
+#         reply = result["messages"][-1]["content"]
+#         return {"reply": reply}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Chat error: {e}")
+
 @app.post("/api/chat")
 def chat(inp: ChatIn):
-    """
-    Chat endpoint: send free-text commands like
-    'create ticket Login for Alice' or 'add user 1 Alice'.
-    LangGraph router will parse and execute using tools.py.
-    """
     try:
-        reply = run_langgraph(inp.message)  # should return a string reply
+        result = lang_app.invoke({"messages": [{"role": "user", "content": inp.message}]})
+        reply = result["messages"][-1]["content"]
         return {"reply": reply}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Chat error: {e}")
+        tb = traceback.format_exc()
+        logger.error("Chat failed: %s\n%s", e, tb)
+        raise HTTPException(status_code=500, detail=f"Chat error: {e.__class__.__name__}: {e}")
 
 # =========================================================
 # 2️⃣ Direct Structured API (calls tools.py directly)
@@ -69,7 +90,7 @@ def list_users():
 def add_user(u: NewUser):
     """Add a new user directly by ID + Name."""
     try:
-        tools.add_user(u.user_id, u.name)
+        db.add_user(u.user_id, u.name)
         return {"ok": True}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Add user failed: {e}")
@@ -78,17 +99,17 @@ def add_user(u: NewUser):
 def delete_user(user_id: int):
     """Delete a user by ID."""
     try:
-        tools.delete_user(user_id)
+        db.delete_user(user_id)
         return {"ok": True}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Delete user failed: {e}")
 
 # ---- Tickets ----
 @app.get("/api/tickets")
-def list_tickets(status: str = "ALL"):
+def list_tickets(status: str = "OPEN"):
     """List tickets, optionally filtered by status."""
     try:
-        return {"tickets": tools.list_tickets(status)}
+        return {"tickets": db.list_tickets_all(status)}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"List tickets failed: {e}")
 
@@ -96,7 +117,7 @@ def list_tickets(status: str = "ALL"):
 def create_ticket(t: NewTicket):
     """Create a new ticket directly for a given assignee."""
     try:
-        tools.create_ticket(t.title, t.assignee)
+        db.create_ticket(t.title, t.assignee)
         return {"ok": True}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Create ticket failed: {e}")
@@ -105,7 +126,7 @@ def create_ticket(t: NewTicket):
 def update_ticket_status(tid: int, s: StatusIn):
     """Update status of a ticket by ID."""
     try:
-        tools.update_status(tid, s.status)
+        db.update_ticket_status(tid, s.status)
         return {"ok": True}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Update status failed: {e}")
@@ -124,7 +145,7 @@ def delete_ticket(tid: int):
 def reset_db():
     """Clear all entries (users + tickets)."""
     try:
-        tools.reset_db()
+        db.reset_db()
         return {"ok": True}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Reset failed: {e}")

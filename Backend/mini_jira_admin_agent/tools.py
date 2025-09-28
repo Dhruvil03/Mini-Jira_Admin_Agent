@@ -1,8 +1,6 @@
 from langchain_core.tools import tool
 from . import db
 
-from langchain_core.tools import tool
-from . import db
 
 @tool("add_user", return_direct=True)
 def add_user_tool(user_id: int | None = None, name: str | None = None) -> str:
@@ -49,3 +47,9 @@ def delete_user_tool(user_id: int) -> str:
 def delete_ticket_tool(user_id: int) -> str:
     """Delete a ticket by user_id."""
     return db.delete_ticket(user_id)
+
+@tool("show_users", return_direct=True)
+def show_users_tool() -> str:
+    """Show all users currently in the system."""
+    users = db.show_users()
+    return "No users found." if not users else "Users:\n" + "\n".join(f"{u['user_id']}: {u['name']}" for u in users)
